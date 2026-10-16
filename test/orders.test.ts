@@ -150,6 +150,16 @@ describe("createOrder", () => {
     expect([c.businessDate, c.orderNumber]).toEqual(["2026-10-17", 1]);
   });
 
+  it("같은 날에는 앞 주문이 픽업완료·취소돼도 번호를 재사용하지 않고 계속 증가한다", async () => {
+    const first = await createOrder(order(), NOW);
+    const second = await createOrder(order(), NOW);
+    await prisma.order.update({ where: { id: first.id }, data: { status: "PICKED_UP" } });
+    await prisma.order.update({ where: { id: second.id }, data: { status: "CANCELED" } });
+
+    const third = await createOrder(order(), NOW);
+    expect(third.orderNumber).toBe(3);
+  });
+
   it("동시에 주문해도 주문번호가 겹치지 않는다", async () => {
     const results = await Promise.all(
       Array.from({ length: 5 }, (_, i) => createOrder(order({ employeeNo: `200${i}` }), NOW)),

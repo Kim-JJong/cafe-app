@@ -2,13 +2,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /** 주문자 화면 틀: 모바일 폭 한 열, 흰 배경 (디자인의 안드로이드 화면 하나) */
-export function Screen({ children, dark = false }: { children: ReactNode; dark?: boolean }) {
+export function Screen({ children }: { children: ReactNode }) {
   return (
-    <main
-      className={`mx-auto flex min-h-dvh w-full max-w-md flex-col ${
-        dark ? "bg-ink text-white" : "bg-white text-ink"
-      }`}
-    >
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-white text-ink">
       {children}
     </main>
   );

@@ -75,8 +75,8 @@ export function OrderStatusView({ params }: { params: Promise<{ id: string }> })
   }, [id, isFinal, apply]);
 
   const header = (
-    <header className="flex items-center justify-between px-5 pt-4 text-[13px] font-medium text-white/50">
-      <Link href="/" aria-label="메뉴로" className="text-lg text-white/70">
+    <header className="flex items-center justify-between px-5 pt-4 text-[13px] font-medium text-ink/50">
+      <Link href="/" aria-label="메뉴로" className="text-lg text-ink/70">
         ‹
       </Link>
       {order && <span>{kstDateLabel(order.createdAt)} 주문</span>}
@@ -87,7 +87,7 @@ export function OrderStatusView({ params }: { params: Promise<{ id: string }> })
     return (
       <>
         {header}
-        <p className="py-16 text-center text-white/50">주문을 찾을 수 없습니다.</p>
+        <p className="py-16 text-center text-ink/50">주문을 찾을 수 없습니다.</p>
       </>
     );
   }
@@ -103,21 +103,21 @@ export function OrderStatusView({ params }: { params: Promise<{ id: string }> })
       {header}
       <ReadyPopup orders={[order]} />
       <section className="flex flex-1 flex-col items-center justify-center gap-1.5 py-10">
-        <p className="text-[13.5px] font-medium text-white/60">나의 대기번호</p>
+        <p className="text-[13.5px] font-medium text-ink/55">나의 대기번호</p>
         <p
-          className={`text-8xl leading-[1.05] font-bold tracking-[-3px] ${canceled ? "text-white/30 line-through" : "text-brand-light"}`}
+          className={`text-8xl leading-[1.05] font-bold tracking-[-3px] ${canceled ? "text-ink/25 line-through" : "text-brand"}`}
         >
           {order.orderNumber}
         </p>
         <p
           role="status"
-          className={`mt-1.5 rounded-full bg-brand-light/15 px-4 py-2 text-[13px] font-semibold text-brand-light ${
+          className={`mt-1.5 rounded-full bg-brand-soft px-4 py-2 text-[13px] font-semibold text-brand ${
             brewing ? "animate-brew" : ""
           }`}
         >
           {MESSAGE[order.status]}
         </p>
-        {waiting && <p className="mt-3.5 text-[12.5px] text-white/45">{waiting}</p>}
+        {waiting && <p className="mt-3.5 text-[12.5px] text-ink/45">{waiting}</p>}
       </section>
 
       <section className="flex flex-col gap-3.5 px-6 pb-[18px]">
@@ -125,12 +125,12 @@ export function OrderStatusView({ params }: { params: Promise<{ id: string }> })
           <>
             <div className="flex items-center gap-2.5">
               {STEPS.map((s, i) => (
-                <div key={s.status} className={`h-1 flex-1 rounded ${i <= stepIndex ? "bg-brand-light" : "bg-white/20"}`} />
+                <div key={s.status} className={`h-1 flex-1 rounded ${i <= stepIndex ? "bg-brand" : "bg-ink/10"}`} />
               ))}
             </div>
-            <ol className="flex justify-between text-[11.5px] font-medium text-white/55">
+            <ol className="flex justify-between text-[11.5px] font-medium text-ink/40">
               {STEPS.map((s, i) => (
-                <li key={s.status} className={i <= stepIndex ? "text-brand-light" : ""}>
+                <li key={s.status} className={i <= stepIndex ? "text-brand" : ""}>
                   {s.label}
                 </li>
               ))}
@@ -138,25 +138,36 @@ export function OrderStatusView({ params }: { params: Promise<{ id: string }> })
           </>
         )}
 
-        <div className="mt-1 flex flex-col gap-2 rounded-[18px] bg-white/[.07] p-[15px]">
+        <div className="mt-1 flex flex-col gap-2 rounded-[18px] bg-surface p-[15px]">
           {order.items.map((item) => (
-            <div key={item.id} className="flex justify-between gap-3 text-[13px] text-white/60">
+            <div key={item.id} className="flex justify-between gap-3 text-[13px] text-ink/60">
               <span>{[item.nameSnapshot, ...item.options.map((o) => o.nameSnapshot.split(": ")[1])].join(" · ")}</span>
               <span>{item.quantity}</span>
             </div>
           ))}
-          <div className="h-px bg-white/12" />
-          <div className="flex justify-between text-[12.5px] font-medium text-white/75">
+          <div className="h-px bg-ink/10" />
+          <div className="flex justify-between text-[12.5px] font-medium text-ink/80">
             <span>급여 공제</span>
             <span>{formatWon(order.totalPrice)}</span>
           </div>
         </div>
 
-        {FINAL_STATUSES.includes(order.status) && (
-          <Link href="/" className="rounded-[14px] bg-white/10 py-[13px] text-center text-sm font-semibold text-white/80">
-            메뉴로 돌아가기
+        <div className="flex gap-2">
+          {FINAL_STATUSES.includes(order.status) && (
+            <Link
+              href="/"
+              className="flex-1 rounded-[14px] bg-surface py-[13px] text-center text-sm font-semibold text-ink/80"
+            >
+              메뉴로 돌아가기
+            </Link>
+          )}
+          <Link
+            href="/orders"
+            className="flex-1 rounded-[14px] border border-ink/12 py-[13px] text-center text-sm font-semibold text-ink/80"
+          >
+            주문 내역 보기
           </Link>
-        )}
+        </div>
       </section>
     </>
   );

@@ -16,7 +16,6 @@
   --color-brand: #b4552d;
   --color-brand-dark: #8a3f1f;
   --color-brand-soft: #fbeee8; /* 선택된 옵션 배경 */
-  --color-brand-light: #f0bfa6; /* 어두운 화면의 강조색 */
   --font-sans: var(--font-pretendard), -apple-system, system-ui, sans-serif;
 }
 

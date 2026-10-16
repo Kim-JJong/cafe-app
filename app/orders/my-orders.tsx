@@ -59,6 +59,11 @@ export function MyOrders() {
         {list?.map((o, i) => {
           const day = kstDateLabel(o.createdAt);
           const canceled = o.status === "CANCELED";
+          const ready = o.status === "READY";
+          // 픽업대기는 눈에 띄게, 끝난 주문(픽업완료·취소)은 연하게
+          const cardStyle = ready
+            ? "border-[1.5px] border-brand bg-brand-soft"
+            : `border border-ink/[.08] bg-white ${canceled || o.status === "PICKED_UP" ? "opacity-60" : ""}`;
           return (
             <Fragment key={o.id}>
               {(i === 0 || kstDateLabel(list[i - 1].createdAt) !== day) && (
@@ -66,13 +71,11 @@ export function MyOrders() {
               )}
               <Link
                 href={`/orders/${o.id}`}
-                className={`flex items-start justify-between rounded-2xl border border-ink/[.08] bg-white px-[15px] py-3.5 ${
-                  canceled ? "opacity-60" : ""
-                }`}
+                className={`flex items-start justify-between rounded-2xl px-[15px] py-3.5 ${cardStyle}`}
               >
                 <div>
                   <p className="text-sm font-semibold">{orderTitle(o.items)}</p>
-                  <p className="mt-1 text-[11.5px] text-ink/50">
+                  <p className={`mt-1 text-[11.5px] ${ready ? "font-medium text-brand" : "text-ink/50"}`}>
                     {formatKstTime(o.createdAt)} · {STATUS_LABEL[o.status]} · {o.orderNumber}번
                   </p>
                 </div>
