@@ -214,5 +214,5 @@ export async function updateMenuItem(id: number, input: MenuInput) {
     await tx.optionGroup.deleteMany({ where: { id: { in: removedGroupIds } } });
 
     return tx.menuItem.findUniqueOrThrow({ where: { id } });
-  });
+  }, { timeout: 15_000 }); // 옵션마다 쿼리가 나가므로 원격 DB(Neon) 지연을 고려
 }

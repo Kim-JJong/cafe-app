@@ -24,17 +24,20 @@
 | 영역 | 선택 | 비고 |
 |---|---|---|
 | 프레임워크 | Next.js (App Router) + TypeScript | 화면과 API를 한 프로젝트에서 |
-| DB | SQLite (WAL 모드) | 파일 하나, 별도 DB 서버 없음 |
-| ORM | Prisma | 추후 PostgreSQL 전환 시 설정 위주 변경 |
+| DB | PostgreSQL (개발·포트폴리오: Neon 무료) | 처음엔 SQLite였음 → git 태그 `sqlite-vm`에 보존 |
+| ORM | Prisma 7 + `@prisma/adapter-pg` | 앱은 `DATABASE_URL`(풀링), 마이그레이션은 `DIRECT_URL`(직접 연결) |
 | 장바구니 | 브라우저 localStorage | 서버 저장 없음 |
-| 실시간 갱신 | 폴링 (주문자 5초, 직원 3초) | SSE/WebSocket은 필요 시 추후 |
-| 서버 | Rocky Linux 9.5 VM (1 vCPU / 2GB RAM / 20GB) | §11 |
+| 실시간 갱신 | 폴링 (주문자 5초, 직원 3초), 단체 주문은 SSE | §12 |
+| 서버 | 포트폴리오: Render 무료 웹 서비스 ([DEPLOY-RENDER.md](DEPLOY-RENDER.md)) / 사내: Rocky Linux 9.5 VM | §11 |
+
+- **같은 날 주문번호**: PostgreSQL은 주문 생성이 동시에 실행되므로, 트랜잭션 잠금(`pg_advisory_xact_lock(영업일)`)으로 같은 영업일 주문이 한 번에 하나씩 번호를 받게 한다.
+- **테스트 DB**: `TEST_DATABASE_URL`(테스트 전용 DB)에 실행할 때마다 `prisma migrate deploy`로 새 마이그레이션만 적용하고, 각 테스트가 필요한 테이블을 비운다. DB를 통째로 지우는 `migrate reset`은 쓰지 않는다. 개발·운영 주소와 같으면 실행을 거부한다.
 
 ## 3. 아키텍처
 
 ```
 [임직원 휴대폰]  ──┐
-                   ├─ HTTPS ─► Caddy ─► Next.js (systemd) ─► Prisma ─► SQLite
+                   ├─ HTTPS ─► Caddy ─► Next.js (systemd) ─► Prisma ─► PostgreSQL
 [카페 직원 PC]  ──┘                                                    │
                                                          (매일 cron) ──► VM 외부 백업
 ```
@@ -269,6 +272,8 @@ GET   /api/staff/settlement.csv?month=  CSV
 - PIN 오입력 반복 시 응답 지연(예: 실패마다 1초).
 
 ## 11. 운영 (Rocky Linux 9.5)
+
+> ⚠️ 이 절과 [DEPLOY.md](DEPLOY.md)는 SQLite 시절(git 태그 `sqlite-vm`) 기준이다. 지금 코드는 PostgreSQL이므로, 사내 VM에 올릴 때는 VM에 PostgreSQL을 설치하거나(Rocky 9: `dnf install postgresql-server`) Neon 같은 외부 DB를 쓰고, 아래의 데이터 경로·`sqlite3 .backup` 백업은 `pg_dump`로 바꿔야 한다.
 
 ### 서버 구성
 | 항목 | 내용 |

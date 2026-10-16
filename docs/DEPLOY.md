@@ -2,6 +2,8 @@
 
 > 대상 서버: 1 vCPU / 2GB RAM / 20GB 디스크 VM · 설계 배경은 [DESIGN.md §11](DESIGN.md#11-운영-rocky-linux-95)
 
+> ⚠️ **이 문서는 SQLite 버전(git 태그 `sqlite-vm`) 기준입니다.** 지금 `main`은 PostgreSQL을 씁니다. 이 문서대로 지금 코드를 VM에 올리려면 PostgreSQL 설치(또는 Neon 같은 외부 DB), `DATABASE_URL`/`DIRECT_URL` 설정, 백업을 `pg_dump`로 바꾸는 작업이 필요합니다. 무료 포트폴리오 배포는 [DEPLOY-RENDER.md](DEPLOY-RENDER.md)를 보세요.
+
 이 문서는 아직 실제 서버에서 검증하지 않은 절차입니다. 처음 배포할 때 각 단계의 **확인** 항목을 실행해 보고, 다른 점이 있으면 이 문서를 고쳐 주세요.
 
 ## 0. 구성 요약

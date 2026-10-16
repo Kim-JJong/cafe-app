@@ -1,0 +1,21 @@
+# Render Blueprint — 무료 웹 서비스 1개 (docs/DEPLOY-RENDER.md)
+services:
+  - type: web
+    name: cafe
+    runtime: node
+    plan: free
+    region: singapore # 한국과 가까운 리전. Neon DB도 가까운 리전(예: AWS 싱가포르)에 만든다
+    branch: main
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL # Neon 풀링(pooled) 주소 — 앱이 사용
+        sync: false
+      - key: DIRECT_URL # Neon 직접(direct) 주소 — 마이그레이션이 사용
+        sync: false
+      - key: STAFF_PIN
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true

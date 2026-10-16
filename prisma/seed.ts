@@ -48,9 +48,6 @@ const menu: { category: string; items: ItemSeed[] }[] = [
 ];
 
 async function main() {
-  // WAL 모드는 DB 파일에 저장되므로 한 번만 켜면 유지된다 (DESIGN.md §2)
-  await prisma.$queryRawUnsafe("PRAGMA journal_mode = WAL");
-
   if ((await prisma.category.count()) > 0) {
     console.log("메뉴가 이미 있어 seed를 건너뜁니다.");
     return;

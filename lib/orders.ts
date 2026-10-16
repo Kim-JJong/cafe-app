@@ -110,10 +110,13 @@ export async function createOrder(input: OrderInput, now = new Date()) {
   const totalPrice = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
   const businessDate = kstBusinessDate(now);
 
-  // 동시 주문으로 주문번호(또는 신규 사번)가 겹치면 unique 제약에 걸리므로 재시도
+  // 같은 영업일 주문은 트랜잭션 잠금으로 한 번에 하나씩 번호를 받는다 (PostgreSQL은 동시에 실행되므로).
+  // 처음 보는 사번이 동시에 들어오는 경우 등 unique 제약에 걸리면 재시도한다.
+  const lockKey = Number(businessDate.replaceAll("-", "")); // 2026-10-16 → 20261016
   for (let attempt = 1; ; attempt++) {
     try {
       return await prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(${lockKey})`;
         const customer = await resolveCustomer(tx, input);
         const last = await tx.order.aggregate({
           where: { businessDate },
@@ -136,7 +139,7 @@ export async function createOrder(input: OrderInput, now = new Date()) {
             },
           },
         });
-      });
+      }, { timeout: 15_000 }); // 원격 DB(Neon) 지연과 잠금 대기를 고려
     } catch (e) {
       const isUniqueConflict =
         e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002";
