@@ -1,0 +1,99 @@
+// 설계: docs/DESIGN.md §4
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String
+  sortOrder Int        @default(0)
+  items     MenuItem[]
+}
+
+model MenuItem {
+  id           Int           @id @default(autoincrement())
+  categoryId   Int
+  category     Category      @relation(fields: [categoryId], references: [id])
+  name         String
+  description  String?
+  basePrice    Int
+  imageUrl     String?
+  isAvailable  Boolean       @default(true) // 품절 토글
+  sortOrder    Int           @default(0)
+  optionGroups OptionGroup[]
+}
+
+model OptionGroup {
+  id         Int      @id @default(autoincrement())
+  menuItemId Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  name       String // "사이즈", "온도", "샷 추가"
+  required   Boolean  @default(false)
+  maxSelect  Int      @default(1)
+  sortOrder  Int      @default(0)
+  options    Option[]
+}
+
+model Option {
+  id            Int         @id @default(autoincrement())
+  optionGroupId Int
+  optionGroup   OptionGroup @relation(fields: [optionGroupId], references: [id])
+  name          String // "Large", "ICE"
+  extraPrice    Int         @default(0)
+  sortOrder     Int         @default(0)
+}
+
+model Customer {
+  id         Int      @id @default(autoincrement())
+  employeeNo String   @unique // 사번 — 정산 기준 키
+  name       String
+  // 추후 로그인 도입 시 추가: email, authProviderId
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  orders     Order[]
+}
+
+model Order {
+  id                   Int         @id @default(autoincrement())
+  businessDate         String // KST 영업일 "2026-10-16"
+  orderNumber          Int // 영업일마다 1부터
+  status               String // OrderStatus (DESIGN.md §5), 앱 코드에서 검증
+  totalPrice           Int
+  customerId           Int
+  customer             Customer    @relation(fields: [customerId], references: [id])
+  customerNameSnapshot String
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  pickedUpAt           DateTime?
+  items                OrderItem[]
+
+  @@unique([businessDate, orderNumber])
+  @@index([status])
+  @@index([customerId, createdAt])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id           Int               @id @default(autoincrement())
+  orderId      Int
+  order        Order             @relation(fields: [orderId], references: [id])
+  menuItemId   Int
+  nameSnapshot String
+  unitPrice    Int // basePrice + 옵션 합계 (주문 시점)
+  quantity     Int
+  options      OrderItemOption[]
+}
+
+model OrderItemOption {
+  id           Int       @id @default(autoincrement())
+  orderItemId  Int
+  orderItem    OrderItem @relation(fields: [orderItemId], references: [id])
+  nameSnapshot String // "사이즈: Large"
+  extraPrice   Int
+}
