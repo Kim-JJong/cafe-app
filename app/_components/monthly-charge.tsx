@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatWon } from "@/lib/price";
 import { monthLabel } from "@/lib/time";
 
 type Charge = { month: string; total: number; orderCount: number };
@@ -27,7 +26,7 @@ export function useMonthlyCharge(employeeNo: string | undefined) {
   return charge && charge.employeeNo === employeeNo ? charge.data : null;
 }
 
-/** 메뉴 홈의 갈색 카드 (디자인 1a) */
+/** 이번 달 급여 공제 예정 카드 (디자인 1a의 갈색 카드). 내정보 화면에서만 보여 준다 */
 export function MonthlyChargeCard({ employeeNo }: { employeeNo: string }) {
   const charge = useMonthlyCharge(employeeNo);
   return (
@@ -48,26 +47,6 @@ export function MonthlyChargeCard({ employeeNo }: { employeeNo: string }) {
           원{charge && ` · 픽업 완료 ${charge.orderCount}건`}
         </span>
       </div>
-    </section>
-  );
-}
-
-/** 주문 내역 상단의 회색 카드 (디자인 1f) */
-export function MonthlyChargeSummary({ employeeNo }: { employeeNo: string }) {
-  const charge = useMonthlyCharge(employeeNo);
-  return (
-    <section className="mx-5 mb-4 flex items-center justify-between rounded-[18px] bg-surface px-[18px] py-4">
-      <div>
-        <p className="text-xs font-medium text-ink/55">
-          {charge ? monthLabel(charge.month) : "이번 달"} 공제 예정액
-        </p>
-        <p className="mt-0.5 text-[22px] font-bold">{charge ? formatWon(charge.total) : "–"}</p>
-      </div>
-      <p className="text-right text-[11.5px] leading-relaxed text-ink/50">
-        픽업 완료 {charge?.orderCount ?? 0}건
-        <br />
-        월 정산 후 급여 공제
-      </p>
     </section>
   );
 }

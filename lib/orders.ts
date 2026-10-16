@@ -198,18 +198,3 @@ export function listOrdersByEmployee(employeeNo: string) {
 }
 
 export type OrderSummary = Awaited<ReturnType<typeof listOrdersByEmployee>>[number];
-
-/** 주문자 취소: 본인 주문이고 RECEIVED 상태일 때만 (DESIGN.md §5) */
-export async function cancelOrderByCustomer(id: number, employeeNo: string) {
-  const { count } = await prisma.order.updateMany({
-    where: { id, status: "RECEIVED" satisfies OrderStatus, customer: { employeeNo } },
-    data: { status: "CANCELED" satisfies OrderStatus },
-  });
-  if (count > 0) return;
-
-  const order = await prisma.order.findUnique({ where: { id }, include: { customer: true } });
-  if (!order || order.customer.employeeNo !== employeeNo) {
-    throw new AppError(404, "NOT_FOUND", "주문을 찾을 수 없습니다.");
-  }
-  throw new AppError(409, "INVALID_STATUS", "이미 제조가 시작되어 취소할 수 없습니다.");
-}

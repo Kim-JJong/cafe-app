@@ -2,27 +2,27 @@
 
 import Link from "next/link";
 import { use, useCallback, useEffect, useState } from "react";
-import { customerInfo } from "@/lib/customer-info";
 import { FINAL_STATUSES, type OrderStatus } from "@/lib/order-status";
 import type { OrderDetail } from "@/lib/orders";
 import { formatWon } from "@/lib/price";
 import { kstDateLabel } from "@/lib/time";
+import { ReadyPopup } from "../../_components/ready-popup";
 
 const POLL_MS = 5000;
 
 // 디자인 1e의 3단계 진행 바
 const STEPS: { status: OrderStatus; label: string }[] = [
-  { status: "RECEIVED", label: "주문 접수" },
+  { status: "RECEIVED", label: "주문 확정" },
   { status: "PREPARING", label: "제조 중" },
   { status: "READY", label: "픽업 대기" },
 ];
 
 const MESSAGE: Record<OrderStatus, string> = {
-  RECEIVED: "주문이 접수되었습니다",
+  RECEIVED: "주문이 확정되었습니다",
   PREPARING: "제조 중입니다",
   READY: "픽업대에서 음료를 받아 가세요",
   PICKED_UP: "픽업이 완료되었습니다",
-  CANCELED: "취소된 주문입니다",
+  CANCELED: "취소된 주문입니다", // 취소 기능이 있던 때의 기존 주문
 };
 
 type OrderJson = Omit<OrderDetail, "createdAt" | "status"> & {
@@ -50,11 +50,8 @@ function waitingText(order: OrderJson) {
 
 export function OrderStatusView({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const saved = customerInfo.useValue();
   const [order, setOrder] = useState<OrderJson | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState(false);
 
   const apply = useCallback((result: FetchResult) => {
     if (result === "not-found") setNotFound(true);
@@ -76,25 +73,6 @@ export function OrderStatusView({ params }: { params: Promise<{ id: string }> })
       clearInterval(timer);
     };
   }, [id, isFinal, apply]);
-
-  async function cancel() {
-    if (!saved || !confirm("주문을 취소할까요?")) return;
-    setCancelling(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/orders/${id}/cancel`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ employeeNo: saved.employeeNo }),
-      });
-      if (!res.ok) setError((await res.json()).error?.message ?? "취소하지 못했습니다.");
-      apply(await fetchOrder(id));
-    } catch {
-      setError("네트워크 오류로 취소하지 못했습니다.");
-    } finally {
-      setCancelling(false);
-    }
-  }
 
   const header = (
     <header className="flex items-center justify-between px-5 pt-4 text-[13px] font-medium text-white/50">
@@ -123,6 +101,7 @@ export function OrderStatusView({ params }: { params: Promise<{ id: string }> })
   return (
     <>
       {header}
+      <ReadyPopup orders={[order]} />
       <section className="flex flex-1 flex-col items-center justify-center gap-1.5 py-10">
         <p className="text-[13.5px] font-medium text-white/60">나의 대기번호</p>
         <p
@@ -173,22 +152,6 @@ export function OrderStatusView({ params }: { params: Promise<{ id: string }> })
           </div>
         </div>
 
-        {error && (
-          <p role="alert" className="rounded-xl bg-red-500/15 p-3 text-sm text-red-300">
-            {error}
-          </p>
-        )}
-
-        {order.status === "RECEIVED" && saved && (
-          <button
-            type="button"
-            onClick={cancel}
-            disabled={cancelling}
-            className="rounded-[14px] border border-white/20 py-[13px] text-sm font-semibold text-white/80 disabled:opacity-40"
-          >
-            {cancelling ? "취소 중…" : "주문 취소"}
-          </button>
-        )}
         {FINAL_STATUSES.includes(order.status) && (
           <Link href="/" className="rounded-[14px] bg-white/10 py-[13px] text-center text-sm font-semibold text-white/80">
             메뉴로 돌아가기

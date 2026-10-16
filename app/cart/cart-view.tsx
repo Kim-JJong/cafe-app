@@ -36,7 +36,13 @@ export function CartView() {
               <p className="mt-1 text-[12.5px] leading-relaxed text-ink/50">{line.optionLabels.join(" · ")}</p>
             )}
             <div className="mt-3 flex items-center justify-between">
-              <Stepper small value={line.quantity} onChange={(q) => setQuantity(line.key, q)} label={line.name} />
+              <Stepper
+                small
+                value={line.quantity}
+                onChange={(q) => setQuantity(line.key, q)}
+                onRemove={() => removeFromCart(line.key)}
+                label={line.name}
+              />
               <button
                 type="button"
                 onClick={() => removeFromCart(line.key)}
@@ -68,7 +74,7 @@ export function CartView() {
         </div>
 
         <p className="px-0.5 text-xs leading-relaxed text-ink/45">
-          픽업 장소는 {STORE_LOCATION} {STORE_NAME}입니다. 주문 후 취소는 제조 시작 전까지 가능합니다.
+          픽업 장소는 {STORE_LOCATION} {STORE_NAME}입니다. 주문하면 바로 확정되며 취소할 수 없습니다.
         </p>
       </div>
 

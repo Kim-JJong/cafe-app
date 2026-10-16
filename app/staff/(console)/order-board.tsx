@@ -13,7 +13,7 @@ type OrderJson = Omit<StaffOrder, "createdAt" | "status"> & {
   status: OrderStatus;
 };
 
-/** 칸반 카드의 버튼: 다음 단계로 보내는 주 버튼 + (접수 단계만) 취소 */
+/** 칸반 카드의 버튼: 다음 단계로 보내는 버튼 하나 (주문 취소는 없음) */
 const NEXT_ACTION: Partial<Record<OrderStatus, { to: OrderStatus; label: string }>> = {
   RECEIVED: { to: "PREPARING", label: "제조 시작" },
   PREPARING: { to: "READY", label: "제조 완료" },
@@ -54,7 +54,6 @@ export function OrderBoard() {
   }, [api, apply]);
 
   async function changeStatus(order: OrderJson, to: OrderStatus) {
-    if (to === "CANCELED" && !confirm(`${order.orderNumber}번 주문을 취소할까요?`)) return;
     setBusyId(order.id);
     setError(null);
     try {
@@ -121,16 +120,6 @@ export function OrderBoard() {
                             className="flex-1 rounded-lg bg-brand py-2 text-sm font-semibold text-white disabled:opacity-40"
                           >
                             {next.label}
-                          </button>
-                        )}
-                        {order.status === "RECEIVED" && (
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => changeStatus(order, "CANCELED")}
-                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-40"
-                          >
-                            취소
                           </button>
                         )}
                       </div>

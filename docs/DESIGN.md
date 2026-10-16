@@ -145,14 +145,15 @@ model OrderItemOption {
 ## 5. 주문 상태
 
 ```
-RECEIVED(접수) ─► PREPARING(제조중) ─► READY(픽업대기) ─► PICKED_UP(픽업완료)
-    │
-    └─► CANCELED(취소)
+RECEIVED(주문 확정) ─► PREPARING(제조중) ─► READY(픽업대기) ─► PICKED_UP(픽업완료)
 ```
+
+주문은 들어오는 즉시 확정되며 **주문자·직원 모두 취소할 수 없다.**
+`CANCELED`는 취소 기능이 있던 때의 기존 주문을 표시하기 위해서만 남아 있다 (새로 만들 수 없음).
 
 | 현재 | 허용되는 다음 상태 | 주체 |
 |---|---|---|
-| RECEIVED | PREPARING, CANCELED | 직원 (취소는 주문자도 가능) |
+| RECEIVED | PREPARING | 직원 |
 | PREPARING | READY | 직원 |
 | READY | PICKED_UP | 직원 |
 | PICKED_UP / CANCELED | 없음 (종료) | — |
@@ -186,14 +187,14 @@ RECEIVED(접수) ─► PREPARING(제조중) ─► READY(픽업대기) ─► P
 
 | 경로 | 사용자 | 내용 |
 |---|---|---|
-| `/` | 주문자 | 인사, 이번 달 공제 예정액 카드, 카테고리 칩 필터, 메뉴 카드(품절 표시), 장바구니 바 |
+| `/` | 주문자 | 인사, 카테고리 칩 필터, 메뉴 카드(품절 표시), 장바구니 바 |
 | `/menu/[id]` | 주문자 | 옵션 선택, 수량, 장바구니 담기 |
 | `/cart` | 주문자 | 장바구니, 수량 변경/삭제, 결제 예정액 → 주문서 확인 |
 | `/checkout` | 주문자 | 픽업 정보, 사번/이름 입력, 급여 공제 안내·동의, 주문하기 |
-| `/orders/[id]` | 주문자 | 대기번호(=일별 주문번호), 앞의 대기 팀 수, 3단계 진행 바(5초 폴링), RECEIVED일 때 취소 |
-| `/orders` | 주문자 | 이번 달 공제 예정액, 날짜별 주문 내역 (localStorage의 사번 기준) |
+| `/orders/[id]` | 주문자 | 대기번호(=일별 주문번호), 앞의 대기 팀 수, 3단계 진행 바(5초 폴링) |
+| `/orders` | 주문자 | 날짜별 주문 내역 (localStorage의 사번 기준) |
 | `/status` | 주문자 | 진행 중인 가장 최근 주문의 대기번호 화면으로 이동 |
-| `/me` | 주문자 | 이 기기에 저장된 사번/이름 확인·변경·삭제 |
+| `/me` | 주문자 | 이번 달 급여 공제 예정액(이 화면에서만 표시), 이 기기에 저장된 사번/이름 확인·변경·삭제 |
 | `/staff/login` | 직원 | PIN 입력 |
 | `/staff` | 직원 | 상태별 칸반(접수/제조중/픽업대기), 다음 단계 버튼, 3초 폴링 |
 | `/staff/menu` | 직원 | 품절 토글 |
@@ -205,6 +206,8 @@ RECEIVED(접수) ─► PREPARING(제조중) ─► READY(픽업대기) ─► P
 - 원본: `docs/사내 카페 주문 앱 (오프라인).html` (claude.ai/design에서 내보낸 손님용 6화면).
 - 라이트 테마 고정. 대기번호 화면만 어두운 배경. 글꼴 Pretendard(`app/fonts`, 400/500/600/700), 브랜드색 `#B4552D`. 색 이름은 `app/globals.css`의 `@theme`.
 - 하단 탭바(주문/현황/내역/내정보)는 `/`, `/status`, `/orders`, `/me`에만 둔다.
+- 음료 완료 팝업: 주문이 READY가 되면 주문 홈(`/`, 내 주문을 5초 폴링)과 대기번호 화면(`/orders/[id]`, 현황 탭이 여기로 이동)에 팝업과 진동(지원 기기만). 확인한 주문 ID는 이 기기에 기억해 한 번만 띄운다 (`lib/ready-notice.ts`).
+- 장바구니 수량이 1일 때 −를 누르면 그 항목을 삭제한다.
 - 매장 이름·위치 문구는 `lib/store-info.ts` 한 곳에서 관리 (A-라운지 / 본사 4층).
 - 디자인에 있지만 넣지 않은 것: 월 한도, 개인컵 할인, 바리스타 메모, 오늘의 추천·판매량, 예상 대기 시간. 음료 사진은 `imageUrl`이 있으면 표시하고 없으면 줄무늬 자리 표시.
 
@@ -221,7 +224,6 @@ POST  /api/orders                       { employeeNo, name, items: [{ menuItemId
 GET   /api/orders/:id                   주문 상태 + aheadCount(먼저 들어와 접수/제조중인 주문 수)
 GET   /api/orders?employeeNo=           내 최근 주문 (항목 이름·수량 포함)
 GET   /api/orders/summary?employeeNo=   이번 달(KST) 공제 예정액 — 정산과 같은 기준(픽업 완료)
-POST  /api/orders/:id/cancel            { employeeNo }  RECEIVED일 때만
 
 POST  /api/staff/login                  { pin }  → 세션 쿠키
 POST  /api/staff/logout

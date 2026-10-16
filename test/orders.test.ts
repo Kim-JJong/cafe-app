@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AppError } from "@/lib/errors";
 import {
-  cancelOrderByCustomer,
   createOrder,
   getOrder,
   listOrdersByEmployee,
@@ -254,30 +253,6 @@ describe("getOrder / listOrdersByEmployee", () => {
 
     const mine = await listOrdersByEmployee("10234");
     expect(mine.map((o) => o.id)).toEqual([second.id, first.id]);
-  });
-});
-
-describe("cancelOrderByCustomer", () => {
-  it("RECEIVED 상태의 본인 주문은 취소된다", async () => {
-    const created = await createOrder(order(), NOW);
-    await cancelOrderByCustomer(created.id, "10234");
-    expect((await getOrder(created.id))?.status).toBe("CANCELED");
-  });
-
-  it("다른 사번이면 NOT_FOUND", async () => {
-    const created = await createOrder(order(), NOW);
-    await expectAppError(cancelOrderByCustomer(created.id, "55555"), "NOT_FOUND");
-    expect((await getOrder(created.id))?.status).toBe("RECEIVED");
-  });
-
-  it("제조가 시작된 주문은 INVALID_STATUS", async () => {
-    const created = await createOrder(order(), NOW);
-    await prisma.order.update({ where: { id: created.id }, data: { status: "PREPARING" } });
-    await expectAppError(cancelOrderByCustomer(created.id, "10234"), "INVALID_STATUS");
-  });
-
-  it("없는 주문은 NOT_FOUND", async () => {
-    await expectAppError(cancelOrderByCustomer(99999, "10234"), "NOT_FOUND");
   });
 });
 

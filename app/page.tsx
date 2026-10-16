@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { getMenu } from "@/lib/menu";
+import { ReadyWatcher } from "./_components/ready-popup";
 import { BottomBar, Screen } from "./_components/screen";
 import { TabBar } from "./_components/tab-bar";
 import { CartBar } from "./cart-bar";
@@ -18,6 +19,7 @@ export default function Home() {
         <CartBar />
         <TabBar />
       </BottomBar>
+      <ReadyWatcher />
     </Screen>
   );
 }

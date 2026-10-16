@@ -1,10 +1,11 @@
-// DESIGN.md §5
+// DESIGN.md §5. 주문은 들어오는 즉시 확정(RECEIVED)되며 취소할 수 없다.
+// CANCELED는 취소 기능이 있던 때의 기존 주문을 표시하기 위해서만 남겨 둔다.
 export const ORDER_STATUSES = ["RECEIVED", "PREPARING", "READY", "PICKED_UP", "CANCELED"] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const STATUS_LABEL: Record<OrderStatus, string> = {
-  RECEIVED: "접수",
+  RECEIVED: "주문 확정",
   PREPARING: "제조중",
   READY: "픽업대기",
   PICKED_UP: "픽업완료",
@@ -18,7 +19,7 @@ export const FINAL_STATUSES: readonly string[] = ["PICKED_UP", "CANCELED"];
 export const ACTIVE_STATUSES: OrderStatus[] = ["RECEIVED", "PREPARING", "READY"];
 
 const TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  RECEIVED: ["PREPARING", "CANCELED"],
+  RECEIVED: ["PREPARING"],
   PREPARING: ["READY"],
   READY: ["PICKED_UP"],
   PICKED_UP: [],

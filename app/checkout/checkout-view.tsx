@@ -7,8 +7,6 @@ import { clearCart, useCart } from "@/lib/cart";
 import { customerInfo, payrollAgreement } from "@/lib/customer-info";
 import { formatWon } from "@/lib/price";
 import { STORE_LOCATION, STORE_NAME } from "@/lib/store-info";
-import { monthLabel } from "@/lib/time";
-import { useMonthlyCharge } from "../_components/monthly-charge";
 import { BottomBar } from "../_components/screen";
 
 const inputClass = "w-full rounded-xl border border-ink/12 bg-white px-3 py-2.5 text-sm";
@@ -35,7 +33,6 @@ export function CheckoutView() {
   const lines = useCart();
   const saved = customerInfo.useValue();
   const agreedBefore = payrollAgreement.useValue();
-  const charge = useMonthlyCharge(saved?.employeeNo);
   const router = useRouter();
 
   // 입력 전에는 저장된 값을 보여 준다
@@ -97,7 +94,7 @@ export function CheckoutView() {
       <div className="flex flex-col gap-3 px-5 pb-4">
         <Card title="픽업 정보">
           <Row label="장소" value={`${STORE_LOCATION} ${STORE_NAME}`} />
-          <Row label="취소 가능" value="제조 시작 전까지" />
+          <Row label="주문 취소" value="불가 (주문 즉시 확정)" />
         </Card>
 
         <Card title="주문자 정보">
@@ -137,17 +134,6 @@ export function CheckoutView() {
               ✓
             </span>
           </div>
-          {charge && (
-            <>
-              <div className="flex justify-between px-0.5 text-[12.5px] text-ink/55">
-                <span>{monthLabel(charge.month)} 공제 예정액</span>
-                <span>
-                  {formatWon(charge.total)} → {formatWon(charge.total + total)}
-                </span>
-              </div>
-              <p className="px-0.5 text-[11.5px] text-ink/45">픽업이 완료되면 공제 예정액에 반영됩니다.</p>
-            </>
-          )}
         </Card>
 
         <Card title="주문 내역">

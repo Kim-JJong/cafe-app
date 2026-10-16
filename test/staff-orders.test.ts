@@ -9,7 +9,6 @@ import { listOrdersByStatus, updateOrderStatus } from "@/lib/staff-orders";
 describe("canTransition", () => {
   const allowed = [
     ["RECEIVED", "PREPARING"],
-    ["RECEIVED", "CANCELED"],
     ["PREPARING", "READY"],
     ["READY", "PICKED_UP"],
   ];
@@ -89,9 +88,15 @@ describe("updateOrderStatus", () => {
     await expectAppError(updateOrderStatus(id, "CANCELED"), "INVALID_STATUS");
   });
 
+  it("주문 확정 후에는 취소할 수 없음", async () => {
+    const { id } = await newOrder();
+    await expectAppError(updateOrderStatus(id, "CANCELED"), "INVALID_STATUS");
+    expect((await prisma.order.findUniqueOrThrow({ where: { id } })).status).toBe("RECEIVED");
+  });
+
   it("종료된 주문은 변경 불가", async () => {
     const { id } = await newOrder();
-    await updateOrderStatus(id, "CANCELED");
+    await prisma.order.update({ where: { id }, data: { status: "PICKED_UP" } });
     await expectAppError(updateOrderStatus(id, "PREPARING"), "INVALID_STATUS");
   });
 
@@ -114,7 +119,7 @@ describe("listOrdersByStatus", () => {
     const later = await newOrder(new Date("2026-10-16T04:00:00Z"));
     const earlier = await newOrder(new Date("2026-10-16T03:00:00Z"));
     const done = await newOrder(new Date("2026-10-16T02:00:00Z"));
-    await updateOrderStatus(done.id, "CANCELED");
+    await prisma.order.update({ where: { id: done.id }, data: { status: "PICKED_UP" } });
 
     const orders = await listOrdersByStatus();
     expect(orders.map((o) => o.id)).toEqual([earlier.id, later.id]);

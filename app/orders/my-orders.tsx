@@ -7,7 +7,6 @@ import { STATUS_LABEL, type OrderStatus } from "@/lib/order-status";
 import type { OrderSummary } from "@/lib/orders";
 import { formatWon } from "@/lib/price";
 import { formatKstTime, kstDateLabel } from "@/lib/time";
-import { MonthlyChargeSummary } from "../_components/monthly-charge";
 
 type OrderSummaryJson = Omit<OrderSummary, "createdAt" | "status"> & {
   createdAt: string;
@@ -53,7 +52,6 @@ export function MyOrders() {
 
   return (
     <>
-      <MonthlyChargeSummary employeeNo={saved.employeeNo} />
       <div className="flex flex-col gap-2 px-5 pb-4">
         {error && <p className="text-sm text-red-600">주문 내역을 불러오지 못했습니다.</p>}
         {!list && !error && <p className="text-ink/50">불러오는 중…</p>}
