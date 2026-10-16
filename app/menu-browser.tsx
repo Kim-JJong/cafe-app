@@ -38,38 +38,35 @@ export function MenuBrowser({ categories, groupId }: { categories: Category[]; g
         })}
       </nav>
 
-      <section className="flex flex-col gap-2.5 px-5 pb-4">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        {items.map((item) => (
-          <Link
-            key={item.id}
-            href={groupId ? `/menu/${item.id}?group=${encodeURIComponent(groupId)}` : `/menu/${item.id}`}
-            className={`flex items-center gap-3 rounded-[18px] border border-ink/[.08] bg-white p-3.5 ${
-              item.isAvailable ? "" : "opacity-50"
-            }`}
-          >
-            <MenuPhoto url={item.imageUrl} className="h-[68px] w-[68px] rounded-[14px]" />
-            <div className="flex-1">
-              <p className="text-[15px] font-semibold">{item.name}</p>
-              {(item.description || !item.isAvailable) && (
-                <p className="mt-[3px] text-xs text-ink/50">
-                  {item.isAvailable ? item.description : "오늘 준비된 수량이 모두 소진되었습니다"}
-                </p>
-              )}
-              <p className={`mt-1.5 text-sm font-semibold ${item.isAvailable ? "text-brand" : "text-ink/45"}`}>
-                {item.isAvailable ? formatWon(item.basePrice) : "품절"}
-              </p>
-            </div>
-            {item.isAvailable && (
-              <span
-                aria-hidden
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-brand pb-0.5 text-xl text-white"
+      <section className="px-5 pb-4">
+        <h2 className="mb-2.5 text-sm font-semibold">{title}</h2>
+        <ul className="grid grid-cols-2 gap-2.5">
+          {items.map((item) => (
+            <li key={item.id}>
+              <Link
+                href={groupId ? `/menu/${item.id}?group=${encodeURIComponent(groupId)}` : `/menu/${item.id}`}
+                className={`flex h-full flex-col overflow-hidden rounded-[18px] border border-ink/[.08] bg-white ${
+                  item.isAvailable ? "" : "opacity-50"
+                }`}
               >
-                +
-              </span>
-            )}
-          </Link>
-        ))}
+                <MenuPhoto url={item.imageUrl} className="aspect-square w-full" />
+                <div className="flex flex-1 flex-col p-3">
+                  <p className="text-[15px] font-semibold">{item.name}</p>
+                  {(item.description || !item.isAvailable) && (
+                    <p className="mt-[3px] line-clamp-2 text-xs text-ink/50">
+                      {item.isAvailable ? item.description : "오늘 준비된 수량이 모두 소진되었습니다"}
+                    </p>
+                  )}
+                  <p
+                    className={`mt-auto pt-1.5 text-sm font-semibold ${item.isAvailable ? "text-brand" : "text-ink/45"}`}
+                  >
+                    {item.isAvailable ? formatWon(item.basePrice) : "품절"}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
     </>
   );
