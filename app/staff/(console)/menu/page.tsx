@@ -1,5 +1,5 @@
-import { SoldOutToggles } from "./sold-out-toggles";
+import { MenuManager } from "./menu-manager";
 
 export default function StaffMenuPage() {
-  return <SoldOutToggles />;
+  return <MenuManager />;
 }

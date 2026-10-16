@@ -25,6 +25,7 @@ model MenuItem {
   basePrice    Int
   imageUrl     String?
   isAvailable  Boolean       @default(true) // 품절 토글
+  isHidden     Boolean       @default(false) // 숨김: 손님 화면에서 빠짐 (삭제 대신)
   sortOrder    Int           @default(0)
   optionGroups OptionGroup[]
 }

@@ -294,17 +294,20 @@ sudo -u cafe /usr/local/bin/cafe-backup.sh
 
 # 2) 새 소스 반영 (4단계와 같은 방법, 또는 git pull)
 
-# 3) 설치 · 마이그레이션 · 빌드 (5단계의 cafe 셸 안에서)
+# 3) 서비스 중지 — 실행 중인 앱이 DB를 열고 있으면 마이그레이션이 "database is locked"로 실패한다
+systemctl stop cafe
+
+# 4) 설치 · 마이그레이션 · 빌드 (5단계의 cafe 셸 안에서)
 npm ci
 npx prisma generate
 npx prisma migrate deploy
 npm run build
 
-# 4) 재시작
-systemctl restart cafe
+# 5) 시작
+systemctl start cafe
 ```
 
-빌드하는 동안에도 기존 서비스는 계속 응답하지만, 메모리가 빠듯하니 주문이 적은 시간에 하는 것을 권장합니다.
+중지부터 시작까지(빌드 포함 수 분) 주문을 받을 수 없으므로 카페 영업이 끝난 뒤에 합니다. 이때 진행 중인 단체 주문 방의 실시간 연결도 끊기며, 서비스가 다시 뜨면 브라우저가 자동으로 다시 연결합니다.
 
 ## 11. 최종 점검 체크리스트
 

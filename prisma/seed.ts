@@ -1,39 +1,18 @@
 import "dotenv/config";
+import { getPreset, type OptionPreset } from "../lib/option-presets";
 import { prisma } from "../lib/prisma";
 
-type OptionSeed = { name: string; extraPrice?: number };
-type GroupSeed = { name: string; required: boolean; maxSelect?: number; options: OptionSeed[] };
+type GroupSeed = OptionPreset;
 type ItemSeed = { name: string; description?: string; basePrice: number; groups: GroupSeed[] };
 
-const temperature = (): GroupSeed => ({
-  name: "온도",
-  required: true,
-  options: [{ name: "HOT" }, { name: "ICE" }],
-});
-const strength = (): GroupSeed => ({
-  name: "농도",
-  required: false,
-  options: [{ name: "연하게" }],
-});
+const temperature = () => getPreset("온도");
+const strength = () => getPreset("농도");
 // 화면에서는 ICE를 골랐을 때만 보인다 (ICE 전용 메뉴는 항상)
-const ice = (): GroupSeed => ({
-  name: "얼음",
-  required: false,
-  options: [{ name: "얼음 많이" }, { name: "얼음 적게" }],
-});
-
+const ice = () => getPreset("얼음");
 // 우유가 들어가는 메뉴만
-const milk = (): GroupSeed => ({
-  name: "우유 변경",
-  required: false,
-  options: [{ name: "락토프리 우유", extraPrice: 500 }, { name: "저지방 우유" }],
-});
+const milk = () => getPreset("우유 변경");
 // 카페모카·초코라떼·바닐라라떼만
-const cream = (): GroupSeed => ({
-  name: "크림",
-  required: false,
-  options: [{ name: "크림 많이" }, { name: "크림 적게" }],
-});
+const cream = () => getPreset("크림");
 
 // 온도만 필수, 나머지는 모두 선택
 const hotOrIce = (...extra: GroupSeed[]) => [temperature(), strength(), ice(), ...extra];

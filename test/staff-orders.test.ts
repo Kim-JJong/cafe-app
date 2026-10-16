@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AppError } from "@/lib/errors";
-import { setMenuItemAvailability } from "@/lib/menu";
+import { setMenuItemFlags } from "@/lib/menu";
 import { canTransition, ORDER_STATUSES } from "@/lib/order-status";
 import { createOrder } from "@/lib/orders";
 import { prisma } from "@/lib/prisma";
@@ -130,14 +130,14 @@ describe("listOrdersByStatus", () => {
   });
 });
 
-describe("setMenuItemAvailability", () => {
+describe("setMenuItemFlags", () => {
   it("품절 토글", async () => {
-    expect(await setMenuItemAvailability(menuItemId, false)).toBe(true);
+    expect(await setMenuItemFlags(menuItemId, { isAvailable: false })).toBe(true);
     expect((await prisma.menuItem.findUniqueOrThrow({ where: { id: menuItemId } })).isAvailable).toBe(false);
-    await setMenuItemAvailability(menuItemId, true);
+    await setMenuItemFlags(menuItemId, { isAvailable: true });
   });
 
   it("없는 메뉴는 false", async () => {
-    expect(await setMenuItemAvailability(99999, false)).toBe(false);
+    expect(await setMenuItemFlags(99999, { isAvailable: false })).toBe(false);
   });
 });

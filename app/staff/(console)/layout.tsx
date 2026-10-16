@@ -13,7 +13,7 @@ export default function StaffLayout({ children }: LayoutProps<"/staff">) {
               주문 현황
             </Link>
             <Link href="/staff/menu" className="hover:text-brand">
-              품절 관리
+              메뉴 관리
             </Link>
             <Link href="/staff/settlement" className="hover:text-brand">
               월 정산

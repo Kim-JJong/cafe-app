@@ -70,7 +70,7 @@ export async function buildOrderLines(items: OrderLineInput[]) {
 
   return items.map((line) => {
     const item = menuById.get(line.menuItemId);
-    if (!item) invalid("존재하지 않는 메뉴입니다.");
+    if (!item || item.isHidden) invalid("판매하지 않는 메뉴입니다.");
     if (!item.isAvailable) throw new AppError(400, "SOLD_OUT", `${item.name}은(는) 품절입니다.`);
 
     const selected = new Set(line.optionIds);
