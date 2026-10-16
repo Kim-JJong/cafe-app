@@ -45,3 +45,27 @@ export function kstMonthRange(year: number, month: number) {
 export function currentKstMonth(now = new Date()) {
   return kstBusinessDate(now).slice(0, 7);
 }
+
+const kstTime = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: "Asia/Seoul",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+
+/** 화면 표시용 KST 시각 "14:20" */
+export function formatKstTime(date: Date | string) {
+  return kstTime.format(new Date(date));
+}
+
+/** 주문 내역 날짜 묶음 이름: 오늘이면 "오늘", 아니면 "10월 15일" */
+export function kstDateLabel(date: Date | string, now = new Date()) {
+  const day = kstBusinessDate(new Date(date));
+  if (day === kstBusinessDate(now)) return "오늘";
+  return `${Number(day.slice(5, 7))}월 ${Number(day.slice(8, 10))}일`;
+}
+
+/** "2026-10" → "10월" */
+export function monthLabel(month: string) {
+  return `${Number(month.slice(5, 7))}월`;
+}

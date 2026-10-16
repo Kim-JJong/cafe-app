@@ -77,7 +77,7 @@ export function SettlementView() {
         <a
           href={`/api/staff/settlement.csv?month=${month}`}
           download
-          className="rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background"
+          className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white"
         >
           CSV 다운로드
         </a>

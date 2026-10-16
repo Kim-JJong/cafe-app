@@ -73,7 +73,7 @@ export function SoldOutToggles() {
                   disabled={busyId === item.id}
                   onClick={() => toggle(item.id, !item.isAvailable)}
                   className={`w-20 rounded-full py-1.5 text-sm font-semibold disabled:opacity-40 ${
-                    item.isAvailable ? "bg-foreground text-background" : "border border-gray-300 text-gray-500"
+                    item.isAvailable ? "bg-brand text-white" : "border border-gray-300 text-gray-500"
                   }`}
                 >
                   {item.isAvailable ? "판매중" : "품절"}

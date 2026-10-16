@@ -1,6 +1,6 @@
 import { ACTIVE_STATUSES, type OrderStatus } from "@/lib/order-status";
 import { prisma } from "@/lib/prisma";
-import { kstMonthRange } from "@/lib/time";
+import { currentKstMonth, kstMonthRange, parseMonth } from "@/lib/time";
 
 // DESIGN.md §7: 주문 시각(createdAt)이 KST 해당 월이고 픽업 완료된 주문만 정산한다.
 const SETTLED: OrderStatus = "PICKED_UP";
@@ -68,3 +68,16 @@ export function getSettlementOrders(year: number, month: number, employeeNo: str
 }
 
 export type SettlementOrder = Awaited<ReturnType<typeof getSettlementOrders>>[number];
+
+/** 주문자 화면의 "이번 달 급여 공제 예정": 정산과 같은 기준(KST 이번 달, 픽업 완료) */
+export async function getMonthlyCharge(employeeNo: string, now = new Date()) {
+  const month = currentKstMonth(now);
+  const { year, month: m } = parseMonth(month)!;
+  const { start, end } = kstMonthRange(year, m);
+  const result = await prisma.order.aggregate({
+    where: { createdAt: { gte: start, lt: end }, status: SETTLED, customer: { employeeNo } },
+    _sum: { totalPrice: true },
+    _count: { _all: true },
+  });
+  return { month, total: result._sum.totalPrice ?? 0, orderCount: result._count._all };
+}

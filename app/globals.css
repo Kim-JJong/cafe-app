@@ -1,26 +1,45 @@
 @import "tailwindcss";
 
+/* 디자인: docs/사내 카페 주문 앱 (오프라인).html — 라이트 테마 고정 */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #1a1a1a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: #1a1a1a;
+  --color-canvas: #f1f1f2; /* 앱 바깥 배경 */
+  --color-surface: #f5f5f6; /* 요약 박스 */
+  --color-chip: #efeff0;
+  --color-brand: #b4552d;
+  --color-brand-dark: #8a3f1f;
+  --color-brand-soft: #fbeee8; /* 선택된 옵션 배경 */
+  --color-brand-light: #f0bfa6; /* 어두운 화면의 강조색 */
+  --font-sans: var(--font-pretendard), -apple-system, system-ui, sans-serif;
 }
 
 body {
-  background: var(--background);
+  background: var(--color-canvas);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes brew {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.animate-brew {
+  animation: brew 2.4s ease-in-out infinite;
+}
+
+/* 음료 사진이 없을 때 쓰는 줄무늬 자리 표시 */
+.photo-placeholder {
+  background: repeating-linear-gradient(45deg, #ececee 0 6px, #f6f6f7 6px 12px);
 }

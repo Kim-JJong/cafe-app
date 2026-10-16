@@ -1,68 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { clearCart, removeFromCart, setQuantity, useCart } from "@/lib/cart";
-import { customerInfo } from "@/lib/customer-info";
-import { MAX_QUANTITY } from "@/lib/limits";
+import { removeFromCart, setQuantity, useCart } from "@/lib/cart";
 import { formatWon } from "@/lib/price";
-
-const inputClass = "w-full rounded-lg border border-gray-300 bg-background px-3 py-2";
+import { STORE_LOCATION, STORE_NAME } from "@/lib/store-info";
+import { BottomBar } from "../_components/screen";
+import { Stepper } from "../_components/stepper";
 
 export function CartView() {
   const lines = useCart();
-  const saved = customerInfo.useValue();
-  const router = useRouter();
-
-  // 입력 전에는 저장된 사번/이름을 보여 준다
-  const [employeeNo, setEmployeeNo] = useState<string | null>(null);
-  const [name, setName] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const employeeNoValue = employeeNo ?? saved?.employeeNo ?? "";
-  const nameValue = name ?? saved?.name ?? "";
+  const count = lines.reduce((sum, l) => sum + l.quantity, 0);
   const total = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
-
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          employeeNo: employeeNoValue,
-          name: nameValue,
-          items: lines.map((l) => ({
-            menuItemId: l.menuItemId,
-            quantity: l.quantity,
-            optionIds: l.optionIds,
-          })),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error?.message ?? "주문에 실패했습니다.");
-        return;
-      }
-      customerInfo.write({ employeeNo: employeeNoValue.trim(), name: nameValue.trim() });
-      clearCart();
-      router.replace(`/orders/${data.id}`);
-    } catch {
-      setError("네트워크 오류로 주문하지 못했습니다. 다시 시도해 주세요.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   if (lines.length === 0) {
     return (
-      <div className="py-16 text-center text-gray-500">
+      <div className="px-5 py-16 text-center text-ink/50">
         <p>장바구니가 비어 있습니다.</p>
-        <Link href="/" className="mt-4 inline-block underline">
+        <Link href="/" className="mt-4 inline-block font-medium text-brand">
           메뉴 보러 가기
         </Link>
       </div>
@@ -70,96 +24,64 @@ export function CartView() {
   }
 
   return (
-    <form onSubmit={submit}>
-      <ul className="divide-y divide-gray-500/30">
+    <>
+      <div className="flex flex-col gap-2.5 px-5 pb-4">
         {lines.map((line) => (
-          <li key={line.key} className="py-4">
+          <article key={line.key} className="rounded-[18px] border border-ink/[.08] bg-white p-[15px]">
             <div className="flex justify-between">
-              <div>
-                <p className="font-medium">{line.name}</p>
-                {line.optionLabels.length > 0 && (
-                  <p className="text-sm text-gray-500">{line.optionLabels.join(" / ")}</p>
-                )}
-              </div>
+              <h2 className="text-[15px] font-semibold">{line.name}</h2>
+              <span className="text-sm font-semibold">{formatWon(line.unitPrice * line.quantity)}</span>
+            </div>
+            {line.optionLabels.length > 0 && (
+              <p className="mt-1 text-[12.5px] leading-relaxed text-ink/50">{line.optionLabels.join(" · ")}</p>
+            )}
+            <div className="mt-3 flex items-center justify-between">
+              <Stepper small value={line.quantity} onChange={(q) => setQuantity(line.key, q)} label={line.name} />
               <button
                 type="button"
                 onClick={() => removeFromCart(line.key)}
-                className="text-sm text-gray-500"
+                className="text-[12.5px] font-medium text-ink/40"
               >
                 삭제
               </button>
             </div>
-            <div className="mt-2 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  aria-label={`${line.name} 수량 줄이기`}
-                  disabled={line.quantity <= 1}
-                  onClick={() => setQuantity(line.key, line.quantity - 1)}
-                  className="h-8 w-8 rounded-full border border-gray-300 disabled:opacity-30"
-                >
-                  −
-                </button>
-                <span className="w-6 text-center">{line.quantity}</span>
-                <button
-                  type="button"
-                  aria-label={`${line.name} 수량 늘리기`}
-                  disabled={line.quantity >= MAX_QUANTITY}
-                  onClick={() => setQuantity(line.key, line.quantity + 1)}
-                  className="h-8 w-8 rounded-full border border-gray-300 disabled:opacity-30"
-                >
-                  +
-                </button>
-              </div>
-              <span>{formatWon(line.unitPrice * line.quantity)}</span>
-            </div>
-          </li>
+          </article>
         ))}
-      </ul>
 
-      <div className="mt-2 flex justify-between border-t border-gray-500/30 pt-4 text-lg font-semibold">
-        <span>합계</span>
-        <span>{formatWon(total)}</span>
+        <Link
+          href="/"
+          className="rounded-2xl border border-dashed border-ink/20 px-[15px] py-[13px] text-center text-[13px] font-medium text-ink/50"
+        >
+          ＋ 메뉴 더 담기
+        </Link>
+
+        <div className="mt-0.5 flex flex-col gap-2 rounded-[18px] bg-surface p-[15px]">
+          <div className="flex justify-between text-[13px] text-ink/60">
+            <span>음료 {count}잔</span>
+            <span>{formatWon(total)}</span>
+          </div>
+          <div className="h-px bg-ink/10" />
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm font-semibold">결제 예정</span>
+            <span className="text-lg font-bold">{formatWon(total)}</span>
+          </div>
+        </div>
+
+        <p className="px-0.5 text-xs leading-relaxed text-ink/45">
+          픽업 장소는 {STORE_LOCATION} {STORE_NAME}입니다. 주문 후 취소는 제조 시작 전까지 가능합니다.
+        </p>
       </div>
 
-      <fieldset className="mt-8 space-y-3">
-        <legend className="mb-2 font-semibold">주문자 정보</legend>
-        <label className="block">
-          <span className="text-sm text-gray-500">사번</span>
-          <input
-            required
-            inputMode="numeric"
-            maxLength={20}
-            value={employeeNoValue}
-            onChange={(e) => setEmployeeNo(e.target.value)}
-            className={inputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="text-sm text-gray-500">이름</span>
-          <input
-            required
-            maxLength={30}
-            value={nameValue}
-            onChange={(e) => setName(e.target.value)}
-            className={inputClass}
-          />
-        </label>
-      </fieldset>
-
-      {error && (
-        <p role="alert" className="mt-4 text-sm text-red-500">
-          {error}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={submitting}
-        className="mt-6 w-full rounded-lg bg-foreground py-3 font-semibold text-background disabled:opacity-40"
-      >
-        {submitting ? "주문 중…" : `${formatWon(total)} 주문하기`}
-      </button>
-    </form>
+      <BottomBar>
+        <div className="px-5 pt-3.5 pb-2.5">
+          <Link
+            href="/checkout"
+            className="block rounded-[14px] bg-brand py-[15px] text-center text-[15px] font-semibold text-white"
+          >
+            주문서 확인
+          </Link>
+        </div>
+      </BottomBar>
+    </>
   );
 }

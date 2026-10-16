@@ -10,44 +10,47 @@ const temperature = (): GroupSeed => ({
   required: true,
   options: [{ name: "HOT" }, { name: "ICE" }],
 });
-const size = (): GroupSeed => ({
-  name: "사이즈",
-  required: true,
-  options: [{ name: "Regular" }, { name: "Large", extraPrice: 500 }],
-});
-const extraShot = (): GroupSeed => ({
-  name: "샷 추가",
+const strength = (): GroupSeed => ({
+  name: "농도",
   required: false,
-  options: [{ name: "샷 추가", extraPrice: 500 }],
+  options: [{ name: "연하게" }],
 });
+// 화면에서는 ICE를 골랐을 때만 보인다 (ICE 전용 메뉴는 항상)
+const ice = (): GroupSeed => ({
+  name: "얼음",
+  required: false,
+  options: [{ name: "얼음 많이" }, { name: "얼음 적게" }],
+});
+
+const hotOrIce = () => [temperature(), strength(), ice()];
 
 const menu: { category: string; items: ItemSeed[] }[] = [
   {
     category: "커피",
     items: [
-      { name: "아메리카노", basePrice: 2500, groups: [temperature(), size(), extraShot()] },
-      { name: "카페라떼", basePrice: 3000, groups: [temperature(), size(), extraShot()] },
-      { name: "바닐라라떼", basePrice: 3500, groups: [temperature(), size(), extraShot()] },
-      { name: "카페모카", basePrice: 3500, groups: [temperature(), size(), extraShot()] },
+      { name: "아메리카노", basePrice: 2500, groups: hotOrIce() },
+      { name: "카페라떼", basePrice: 3000, groups: hotOrIce() },
+      { name: "바닐라라떼", basePrice: 3500, groups: hotOrIce() },
+      { name: "카페모카", basePrice: 3500, groups: hotOrIce() },
     ],
   },
   {
     category: "논커피",
     items: [
-      { name: "초코라떼", basePrice: 3000, groups: [temperature(), size()] },
-      { name: "녹차라떼", basePrice: 3000, groups: [temperature(), size()] },
+      { name: "초코라떼", basePrice: 3000, groups: hotOrIce() },
+      { name: "녹차라떼", basePrice: 3000, groups: hotOrIce() },
     ],
   },
   {
     category: "티",
     items: [
-      { name: "캐모마일", basePrice: 2500, groups: [temperature()] },
-      { name: "얼그레이", basePrice: 2500, groups: [temperature()] },
+      { name: "캐모마일", basePrice: 2500, groups: hotOrIce() },
+      { name: "얼그레이", basePrice: 2500, groups: hotOrIce() },
     ],
   },
   {
     category: "에이드",
-    items: [{ name: "레몬에이드", description: "ICE 전용", basePrice: 3500, groups: [size()] }],
+    items: [{ name: "레몬에이드", description: "ICE 전용", basePrice: 3500, groups: [ice()] }],
   },
 ];
 

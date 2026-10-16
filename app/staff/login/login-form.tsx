@@ -57,7 +57,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-lg bg-foreground py-3 font-semibold text-background disabled:opacity-40"
+        className="w-full rounded-lg bg-brand py-3 font-semibold text-white disabled:opacity-40"
       >
         {submitting ? "확인 중…" : "로그인"}
       </button>

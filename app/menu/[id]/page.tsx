@@ -2,20 +2,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getMenuItem } from "@/lib/menu";
+import { formatWon } from "@/lib/price";
+import { MenuPhoto } from "../../_components/menu-photo";
+import { Screen } from "../../_components/screen";
 import { MenuOptionForm } from "./menu-option-form";
 
 export default function MenuPage({ params }: PageProps<"/menu/[id]">) {
   return (
-    <main className="mx-auto w-full max-w-md flex-1 px-4 pb-10">
-      <header className="py-5">
-        <Link href="/" className="text-sm text-gray-500">
-          ← 메뉴
-        </Link>
-      </header>
-      <Suspense fallback={<p className="text-gray-500">불러오는 중…</p>}>
+    <Screen>
+      <Suspense fallback={<p className="p-5 text-ink/50">불러오는 중…</p>}>
         <MenuDetail params={params} />
       </Suspense>
-    </main>
+    </Screen>
   );
 }
 
@@ -28,13 +26,30 @@ async function MenuDetail({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      <h1 className="text-2xl font-bold">{item.name}</h1>
-      {item.description && <p className="mt-1 text-gray-500">{item.description}</p>}
+      <div className="relative">
+        <MenuPhoto url={item.imageUrl} className="h-[196px] w-full" />
+        <Link
+          href="/"
+          aria-label="메뉴로 돌아가기"
+          className="absolute top-3.5 left-4 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-white/90 text-base"
+        >
+          ‹
+        </Link>
+      </div>
+      <div className="px-5 pt-[18px]">
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-[21px] font-semibold">{item.name}</h1>
+          <span className="text-[17px] font-bold">{formatWon(item.basePrice)}</span>
+        </div>
+        {item.description && (
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink/55">{item.description}</p>
+        )}
+      </div>
       {item.isAvailable ? (
         <MenuOptionForm item={item} />
       ) : (
-        <p className="mt-8 rounded-lg bg-gray-500/15 p-4 text-center text-gray-500">
-          현재 품절된 메뉴입니다.
+        <p className="mx-5 mt-8 rounded-2xl bg-surface p-4 text-center text-sm text-ink/55">
+          오늘 준비된 수량이 모두 소진되었습니다.
         </p>
       )}
     </>

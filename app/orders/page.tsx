@@ -1,16 +1,15 @@
-import Link from "next/link";
+import { BottomBar, Screen } from "../_components/screen";
+import { TabBar } from "../_components/tab-bar";
 import { MyOrders } from "./my-orders";
 
 export default function OrdersPage() {
   return (
-    <main className="mx-auto w-full max-w-md flex-1 px-4 pb-10">
-      <header className="py-5">
-        <Link href="/" className="text-sm text-gray-500">
-          ← 메뉴
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">내 주문</h1>
-      </header>
+    <Screen>
+      <h1 className="px-5 py-3.5 text-lg font-semibold">주문 내역</h1>
       <MyOrders />
-    </main>
+      <BottomBar>
+        <TabBar />
+      </BottomBar>
+    </Screen>
   );
 }

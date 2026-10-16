@@ -3,45 +3,62 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { addToCart } from "@/lib/cart";
-import { MAX_QUANTITY } from "@/lib/limits";
 import type { MenuItemDetail } from "@/lib/menu";
+import { isGroupAvailable } from "@/lib/option-rules";
 import { calcUnitPrice, formatWon } from "@/lib/price";
+import { BottomBar } from "../../_components/screen";
+import { Stepper } from "../../_components/stepper";
 
-// 필수 그룹은 첫 번째 옵션을 기본 선택 (HOT, Regular 등)
+type Group = MenuItemDetail["optionGroups"][number];
+
+// 필수 그룹은 첫 번째 옵션을 기본 선택 (HOT 등)
 function defaultSelection(item: MenuItemDetail) {
   return item.optionGroups.flatMap((g) => (g.required && g.options[0] ? [g.options[0].id] : []));
+}
+
+/** 고를 수 없게 된 그룹(HOT으로 바꾼 뒤의 얼음 등)의 선택을 지운다 */
+function dropUnavailable(groups: Group[], selected: number[]) {
+  const blocked = new Set(
+    groups.filter((g) => !isGroupAvailable(groups, g, selected)).flatMap((g) => g.options.map((o) => o.id)),
+  );
+  return selected.filter((id) => !blocked.has(id));
 }
 
 export function MenuOptionForm({ item }: { item: MenuItemDetail }) {
   const [selected, setSelected] = useState<number[]>(() => defaultSelection(item));
   const [quantity, setQuantity] = useState(1);
   const router = useRouter();
+  const groups = item.optionGroups;
 
-  function toggle(group: MenuItemDetail["optionGroups"][number], optionId: number) {
+  function toggle(group: Group, optionId: number) {
     const groupIds = group.options.map((o) => o.id);
     const inGroup = selected.filter((id) => groupIds.includes(id));
     const others = selected.filter((id) => !groupIds.includes(id));
 
+    let next = selected;
     if (inGroup.includes(optionId)) {
       if (group.required && inGroup.length === 1) return; // 필수 그룹은 비울 수 없음
-      setSelected([...others, ...inGroup.filter((id) => id !== optionId)]);
+      next = [...others, ...inGroup.filter((id) => id !== optionId)];
     } else if (group.maxSelect === 1) {
-      setSelected([...others, optionId]); // 단일 선택은 교체
+      next = [...others, optionId]; // 단일 선택은 교체
     } else if (inGroup.length < group.maxSelect) {
-      setSelected([...others, ...inGroup, optionId]);
+      next = [...others, ...inGroup, optionId];
     }
+    setSelected(dropUnavailable(groups, next));
   }
 
   const unitPrice = calcUnitPrice(item, selected);
+  const visible = groups.filter((g) => isGroupAvailable(groups, g, selected));
+  // 선택지가 여럿이면 버튼 묶음, 하나뿐이면 "추가 옵션" 목록의 스위치 (디자인 1b)
+  const choiceGroups = visible.filter((g) => g.options.length > 1);
+  const toggleGroups = visible.filter((g) => g.options.length === 1);
 
   function add() {
     addToCart({
       menuItemId: item.id,
       name: item.name,
       optionIds: selected,
-      optionLabels: item.optionGroups.flatMap((g) =>
-        g.options.filter((o) => selected.includes(o.id)).map((o) => o.name),
-      ),
+      optionLabels: groups.flatMap((g) => g.options.filter((o) => selected.includes(o.id)).map((o) => o.name)),
       unitPrice,
       quantity,
     });
@@ -49,67 +66,85 @@ export function MenuOptionForm({ item }: { item: MenuItemDetail }) {
   }
 
   return (
-    <div className="mt-6">
-      {item.optionGroups.map((group) => (
-        <fieldset key={group.id} className="mb-6">
-          <legend className="mb-2 font-semibold">
-            {group.name}
-            {group.required && <span className="ml-1 text-sm text-red-500">필수</span>}
-          </legend>
-          <div className="flex flex-wrap gap-2">
-            {group.options.map((option) => {
-              const active = selected.includes(option.id);
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => toggle(group, option.id)}
-                  className={`rounded-lg border px-4 py-2 text-sm ${
-                    active ? "border-foreground bg-foreground text-background" : "border-gray-300"
-                  }`}
-                >
-                  {option.name}
-                  {option.extraPrice > 0 && ` +${formatWon(option.extraPrice)}`}
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
-      ))}
+    <>
+      <div className="px-5 pb-6">
+        {choiceGroups.map((group) => (
+          <fieldset key={group.id} className="mt-5">
+            <legend className="text-[13px] font-semibold">{group.name}</legend>
+            <div className="mt-2.5 flex gap-2">
+              {group.options.map((option) => {
+                const active = selected.includes(option.id);
+                const style = !active
+                  ? "border border-ink/12 bg-white font-medium"
+                  : group.required
+                    ? "bg-ink font-semibold text-white"
+                    : "border-[1.5px] border-brand bg-brand-soft font-semibold text-brand";
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => toggle(group, option.id)}
+                    className={`flex-1 rounded-xl py-[11px] text-center text-[13.5px] ${style}`}
+                  >
+                    {option.name}
+                    {option.extraPrice > 0 && ` +${option.extraPrice.toLocaleString("ko-KR")}`}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        ))}
 
-      <div className="mb-6 flex items-center justify-between">
-        <span className="font-semibold">수량</span>
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            aria-label="수량 줄이기"
-            disabled={quantity <= 1}
-            onClick={() => setQuantity(quantity - 1)}
-            className="h-9 w-9 rounded-full border border-gray-300 disabled:opacity-30"
-          >
-            −
-          </button>
-          <span className="w-6 text-center">{quantity}</span>
-          <button
-            type="button"
-            aria-label="수량 늘리기"
-            disabled={quantity >= MAX_QUANTITY}
-            onClick={() => setQuantity(quantity + 1)}
-            className="h-9 w-9 rounded-full border border-gray-300 disabled:opacity-30"
-          >
-            +
-          </button>
-        </div>
+        {toggleGroups.length > 0 && (
+          <section className="mt-[18px]">
+            <h2 className="text-[13px] font-semibold">추가 옵션</h2>
+            <ul className="mt-2.5 divide-y divide-ink/[.06] overflow-hidden rounded-[14px] border border-ink/[.08]">
+              {toggleGroups.map((group) => {
+                const option = group.options[0];
+                const on = selected.includes(option.id);
+                return (
+                  <li key={group.id} className="flex items-center justify-between px-[15px] py-[13px]">
+                    <span className="text-[13.5px] font-medium">
+                      {option.name}
+                      {option.extraPrice > 0 && (
+                        <span className="text-ink/45"> +{formatWon(option.extraPrice)}</span>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={on}
+                      aria-label={option.name}
+                      onClick={() => toggle(group, option.id)}
+                      className={`relative h-[23px] w-10 rounded-full transition-colors ${on ? "bg-brand" : "bg-ink/15"}`}
+                    >
+                      <span
+                        className={`absolute top-[2.5px] h-[18px] w-[18px] rounded-full bg-white transition-all ${
+                          on ? "right-[3px]" : "left-[3px]"
+                        }`}
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
       </div>
 
-      <button
-        type="button"
-        onClick={add}
-        className="w-full rounded-lg bg-foreground py-3 font-semibold text-background disabled:opacity-40"
-      >
-        {formatWon(unitPrice * quantity)} 담기
-      </button>
-    </div>
+      <BottomBar>
+        <div className="flex items-center gap-3 border-t border-ink/[.07] px-5 pt-3.5 pb-2.5">
+          <Stepper value={quantity} onChange={setQuantity} label={item.name} />
+          <button
+            type="button"
+            onClick={add}
+            className="flex-1 rounded-[14px] bg-brand py-3.5 text-center text-[14.5px] font-semibold text-white"
+          >
+            {formatWon(unitPrice * quantity)} 담기
+          </button>
+        </div>
+      </BottomBar>
+    </>
   );
 }

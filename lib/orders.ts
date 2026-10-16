@@ -2,6 +2,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { resolveCustomer, type CustomerInput } from "@/lib/customer";
 import { AppError } from "@/lib/errors";
 import { MAX_QUANTITY } from "@/lib/limits";
+import { isGroupAvailable } from "@/lib/option-rules";
 import type { OrderStatus } from "@/lib/order-status";
 import { calcUnitPrice } from "@/lib/price";
 import { prisma } from "@/lib/prisma";
@@ -82,6 +83,9 @@ export async function createOrder(input: OrderInput, now = new Date()) {
       if (chosen.length > group.maxSelect) {
         invalid(`${item.name}의 ${group.name}은(는) ${group.maxSelect}개까지 선택할 수 있습니다.`);
       }
+      if (chosen.length > 0 && !isGroupAvailable(item.optionGroups, group, line.optionIds)) {
+        invalid(`${item.name}의 ${group.name} 옵션은 ICE에서만 선택할 수 있습니다.`);
+      }
       for (const o of chosen) {
         optionSnapshots.push({ nameSnapshot: `${group.name}: ${o.name}`, extraPrice: o.extraPrice });
       }
@@ -161,6 +165,21 @@ export function getOrder(id: number) {
 
 export type OrderDetail = NonNullable<Awaited<ReturnType<typeof getOrder>>>;
 
+const WAITING_STATUSES: OrderStatus[] = ["RECEIVED", "PREPARING"];
+
+/** 대기번호 화면의 "앞에 N팀": 이 주문보다 먼저 들어와 아직 제조가 끝나지 않은 주문 수 */
+export function countOrdersAhead(order: { id: number; createdAt: Date }) {
+  return prisma.order.count({
+    where: {
+      status: { in: WAITING_STATUSES },
+      OR: [
+        { createdAt: { lt: order.createdAt } },
+        { createdAt: order.createdAt, id: { lt: order.id } },
+      ],
+    },
+  });
+}
+
 export function listOrdersByEmployee(employeeNo: string) {
   return prisma.order.findMany({
     where: { customer: { employeeNo } },
@@ -173,6 +192,7 @@ export function listOrdersByEmployee(employeeNo: string) {
       status: true,
       totalPrice: true,
       createdAt: true,
+      items: { orderBy: { id: "asc" }, select: { nameSnapshot: true, quantity: true } },
     },
   });
 }

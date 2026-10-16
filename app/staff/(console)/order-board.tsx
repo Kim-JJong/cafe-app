@@ -118,7 +118,7 @@ export function OrderBoard() {
                             type="button"
                             disabled={busy}
                             onClick={() => changeStatus(order, next.to)}
-                            className="flex-1 rounded-lg bg-foreground py-2 text-sm font-semibold text-background disabled:opacity-40"
+                            className="flex-1 rounded-lg bg-brand py-2 text-sm font-semibold text-white disabled:opacity-40"
                           >
                             {next.label}
                           </button>

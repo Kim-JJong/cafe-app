@@ -1,5 +1,5 @@
 import { AppError, errorResponse } from "@/lib/errors";
-import { getOrder } from "@/lib/orders";
+import { countOrdersAhead, getOrder } from "@/lib/orders";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
@@ -7,5 +7,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!order) {
     return errorResponse(new AppError(404, "NOT_FOUND", "주문을 찾을 수 없습니다."));
   }
-  return Response.json(order);
+  const waiting = order.status === "RECEIVED" || order.status === "PREPARING";
+  return Response.json({ ...order, aheadCount: waiting ? await countOrdersAhead(order) : 0 });
 }
