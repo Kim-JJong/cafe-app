@@ -24,7 +24,7 @@
 | 영역 | 선택 | 비고 |
 |---|---|---|
 | 프레임워크 | Next.js (App Router) + TypeScript | 화면과 API를 한 프로젝트에서 |
-| DB | PostgreSQL (개발·포트폴리오: Neon 무료) | 처음엔 SQLite였음 → git 태그 `sqlite-vm`에 보존 |
+| DB | PostgreSQL (개발·포트폴리오: Neon 무료) | 처음엔 SQLite였음 → `vm-sqlite` 브랜치에 보존 |
 | ORM | Prisma 7 + `@prisma/adapter-pg` | 앱은 `DATABASE_URL`(풀링), 마이그레이션은 `DIRECT_URL`(직접 연결) |
 | 장바구니 | 브라우저 localStorage | 서버 저장 없음 |
 | 실시간 갱신 | 폴링 (주문자 5초, 직원 3초), 단체 주문은 SSE | §12 |
@@ -273,7 +273,7 @@ GET   /api/staff/settlement.csv?month=  CSV
 
 ## 11. 운영 (Rocky Linux 9.5)
 
-> ⚠️ 이 절과 [DEPLOY.md](DEPLOY.md)는 SQLite 시절(git 태그 `sqlite-vm`) 기준이다. 지금 코드는 PostgreSQL이므로, 사내 VM에 올릴 때는 VM에 PostgreSQL을 설치하거나(Rocky 9: `dnf install postgresql-server`) Neon 같은 외부 DB를 쓰고, 아래의 데이터 경로·`sqlite3 .backup` 백업은 `pg_dump`로 바꿔야 한다.
+> ⚠️ 이 절과 [DEPLOY.md](DEPLOY.md)는 SQLite 시절(`vm-sqlite` 브랜치) 기준이다. SQLite 그대로 VM에 올리려면 그 브랜치를 쓴다. 지금 코드는 PostgreSQL이므로, 사내 VM에 올릴 때는 VM에 PostgreSQL을 설치하거나(Rocky 9: `dnf install postgresql-server`) Neon 같은 외부 DB를 쓰고, 아래의 데이터 경로·`sqlite3 .backup` 백업은 `pg_dump`로 바꿔야 한다.
 
 ### 서버 구성
 | 항목 | 내용 |
