@@ -240,10 +240,9 @@ GET   /api/staff/settlement.csv?month=  CSV
 | 환경변수 | `/etc/cafe/cafe.env` (권한 600) |
 
 ### 빌드와 배포
-- 2GB RAM에서 `next build`는 메모리 부족 위험이 있으므로 **서버에서 빌드하지 않는다**.
-- Next.js `output: "standalone"`으로 빌드하고 결과물만 서버에 복사한다.
-- 개발 PC는 Windows, 서버는 Linux이므로 빌드는 **`rockylinux:9` 컨테이너(로컬 Docker 또는 CI)** 에서 수행해 Prisma 엔진·네이티브 모듈을 서버 환경과 맞춘다.
-  - 대안: 서버에 스왑 2GB를 잡고 서버에서 빌드.
+- 절차는 [DEPLOY.md](DEPLOY.md).
+- 개발 PC(Windows)에는 Docker가 없어 서버와 같은 환경에서 빌드할 곳이 없으므로, **서버에 스왑 2GB를 잡고 서버에서 직접 빌드**한다 (`npm ci` → `next build` → `next start`). 네이티브 모듈(`better-sqlite3`)이 서버 환경에 맞게 설치된다.
+  - 추후 CI가 생기면 `rockylinux:9` 컨테이너에서 `output: "standalone"`으로 빌드해 결과물만 올리는 방식으로 바꿀 수 있다.
 - DB 스키마 변경은 `prisma migrate deploy`로 적용 (배포 전 백업 필수).
 
 ### 백업
