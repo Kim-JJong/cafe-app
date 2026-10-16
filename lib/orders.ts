@@ -56,16 +56,19 @@ export function parseOrderInput(body: unknown): OrderInput {
   return { employeeNo: trimmedNo, name: trimmedName, items: lines };
 }
 
-/** DESIGN.md §4: 가격은 서버에서 계산하고, 이름/가격은 스냅샷으로 저장한다. */
-export async function createOrder(input: OrderInput, now = new Date()) {
-  const menuItemIds = [...new Set(input.items.map((l) => l.menuItemId))];
+/**
+ * 주문 항목을 DB 기준으로 검증하고 가격·이름 스냅샷을 만든다 (품절, 옵션 규칙).
+ * 일반 주문과 단체 주문 방 담기가 같은 규칙을 쓴다.
+ */
+export async function buildOrderLines(items: OrderLineInput[]) {
+  const menuItemIds = [...new Set(items.map((l) => l.menuItemId))];
   const menuItems = await prisma.menuItem.findMany({
     where: { id: { in: menuItemIds } },
     include: { optionGroups: { include: { options: true } } },
   });
   const menuById = new Map(menuItems.map((m) => [m.id, m]));
 
-  const lines = input.items.map((line) => {
+  return items.map((line) => {
     const item = menuById.get(line.menuItemId);
     if (!item) invalid("존재하지 않는 메뉴입니다.");
     if (!item.isAvailable) throw new AppError(400, "SOLD_OUT", `${item.name}은(는) 품절입니다.`);
@@ -99,7 +102,11 @@ export async function createOrder(input: OrderInput, now = new Date()) {
       optionSnapshots,
     };
   });
+}
 
+/** DESIGN.md §4: 가격은 서버에서 계산하고, 이름/가격은 스냅샷으로 저장한다. */
+export async function createOrder(input: OrderInput, now = new Date()) {
+  const lines = await buildOrderLines(input.items);
   const totalPrice = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
   const businessDate = kstBusinessDate(now);
 

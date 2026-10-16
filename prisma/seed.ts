@@ -22,23 +22,37 @@ const ice = (): GroupSeed => ({
   options: [{ name: "얼음 많이" }, { name: "얼음 적게" }],
 });
 
-const hotOrIce = () => [temperature(), strength(), ice()];
+// 우유가 들어가는 메뉴만
+const milk = (): GroupSeed => ({
+  name: "우유 변경",
+  required: false,
+  options: [{ name: "락토프리 우유", extraPrice: 500 }, { name: "저지방 우유" }],
+});
+// 카페모카·초코라떼·바닐라라떼만
+const cream = (): GroupSeed => ({
+  name: "크림",
+  required: false,
+  options: [{ name: "크림 많이" }, { name: "크림 적게" }],
+});
+
+// 온도만 필수, 나머지는 모두 선택
+const hotOrIce = (...extra: GroupSeed[]) => [temperature(), strength(), ice(), ...extra];
 
 const menu: { category: string; items: ItemSeed[] }[] = [
   {
     category: "커피",
     items: [
       { name: "아메리카노", basePrice: 2500, groups: hotOrIce() },
-      { name: "카페라떼", basePrice: 3000, groups: hotOrIce() },
-      { name: "바닐라라떼", basePrice: 3500, groups: hotOrIce() },
-      { name: "카페모카", basePrice: 3500, groups: hotOrIce() },
+      { name: "카페라떼", basePrice: 3000, groups: hotOrIce(milk()) },
+      { name: "바닐라라떼", basePrice: 3500, groups: hotOrIce(milk(), cream()) },
+      { name: "카페모카", basePrice: 3500, groups: hotOrIce(milk(), cream()) },
     ],
   },
   {
     category: "논커피",
     items: [
-      { name: "초코라떼", basePrice: 3000, groups: hotOrIce() },
-      { name: "녹차라떼", basePrice: 3000, groups: hotOrIce() },
+      { name: "초코라떼", basePrice: 3000, groups: hotOrIce(milk(), cream()) },
+      { name: "녹차라떼", basePrice: 3000, groups: hotOrIce(milk()) },
     ],
   },
   {

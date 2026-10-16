@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getMenuItem } from "@/lib/menu";
 import { formatWon } from "@/lib/price";
 import { MenuPhoto } from "../../_components/menu-photo";
 import { Screen } from "../../_components/screen";
+import { BackLink } from "./back-link";
 import { MenuOptionForm } from "./menu-option-form";
 
 export default function MenuPage({ params }: PageProps<"/menu/[id]">) {
@@ -28,13 +28,7 @@ async function MenuDetail({ params }: { params: Promise<{ id: string }> }) {
     <>
       <div className="relative">
         <MenuPhoto url={item.imageUrl} className="h-[196px] w-full" />
-        <Link
-          href="/"
-          aria-label="메뉴로 돌아가기"
-          className="absolute top-3.5 left-4 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-white/90 text-base"
-        >
-          ‹
-        </Link>
+        <BackLink />
       </div>
       <div className="px-5 pt-[18px]">
         <div className="flex items-baseline justify-between">

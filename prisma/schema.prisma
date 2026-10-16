@@ -97,3 +97,46 @@ model OrderItemOption {
   nameSnapshot String // "사이즈: Large"
   extraPrice   Int
 }
+
+// 단체 주문 방 (DESIGN.md §12). 방장 한 명이 사고, 팀원은 이름만 넣고 음료를 담는다.
+model GroupRoom {
+  id         String        @id // 공유 링크에 들어가는 추측하기 어려운 무작위 값
+  hostKey    String // 방장 권한 확인용 비밀값. 방장의 GroupMember.memberKey와 같다
+  employeeNo String // 결제(급여 공제) 대상 = 방장 사번
+  hostName   String
+  deadlineAt DateTime // 이후에는 음료를 담을 수 없음
+  status     String // OPEN | ORDERING(주문 처리 중) | ORDERED
+  orderId    Int?
+  createdAt  DateTime      @default(now())
+  members    GroupMember[]
+  items      GroupItem[]
+}
+
+model GroupMember {
+  id        Int         @id @default(autoincrement())
+  roomId    String
+  room      GroupRoom   @relation(fields: [roomId], references: [id])
+  memberKey String // 본인 항목 삭제 확인용 비밀값 (참여자 브라우저에만 저장)
+  name      String
+  createdAt DateTime    @default(now())
+  items     GroupItem[]
+
+  @@unique([roomId, memberKey])
+}
+
+model GroupItem {
+  id           Int         @id @default(autoincrement())
+  roomId       String
+  room         GroupRoom   @relation(fields: [roomId], references: [id])
+  memberId     Int
+  member       GroupMember @relation(fields: [memberId], references: [id])
+  menuItemId   Int
+  optionIds    String // "3,7" (주문할 때 다시 검증)
+  nameSnapshot String // 화면 표시용
+  optionLabels String // "ICE · 연하게"
+  unitPrice    Int
+  quantity     Int
+  createdAt    DateTime    @default(now())
+
+  @@index([roomId])
+}

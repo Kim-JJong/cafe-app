@@ -10,7 +10,8 @@ type Category = Awaited<ReturnType<typeof getMenu>>[number];
 
 const ALL = 0;
 
-export function MenuBrowser({ categories }: { categories: Category[] }) {
+/** groupId가 있으면 단체 주문 방에 담는 상세 화면으로 연결한다 */
+export function MenuBrowser({ categories, groupId }: { categories: Category[]; groupId?: string }) {
   const [selected, setSelected] = useState(ALL);
   const visible = selected === ALL ? categories : categories.filter((c) => c.id === selected);
   const items = visible.flatMap((c) => c.items);
@@ -42,7 +43,7 @@ export function MenuBrowser({ categories }: { categories: Category[] }) {
         {items.map((item) => (
           <Link
             key={item.id}
-            href={`/menu/${item.id}`}
+            href={groupId ? `/menu/${item.id}?group=${encodeURIComponent(groupId)}` : `/menu/${item.id}`}
             className={`flex items-center gap-3 rounded-[18px] border border-ink/[.08] bg-white p-3.5 ${
               item.isAvailable ? "" : "opacity-50"
             }`}
